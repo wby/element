@@ -267,6 +267,14 @@
             {
               "path": "/image",
               "title": "Image 图片"
+            },
+            {
+              "path": "/backtop",
+              "title": "Backtop 回到顶部"
+            },
+            {
+              "path": "/infiniteScroll",
+              "title": "InfiniteScroll 无限滚动"
             }
           ]
         }
@@ -541,6 +549,14 @@
             {
               "path": "/image",
               "title": "Image"
+            },
+            {
+              "path": "/backtop",
+              "title": "Backtop"
+            },
+            {
+              "path": "/infiniteScroll",
+              "title": "InfiniteScroll"
             }
           ]
         }
@@ -815,6 +831,14 @@
             {
               "path": "/image",
               "title": "Image"
+            },
+            {
+              "path": "/backtop",
+              "title": "Backtop"
+            },
+            {
+              "path": "/infiniteScroll",
+              "title": "InfiniteScroll"
             }
           ]
         }
@@ -1089,6 +1113,14 @@
             {
               "path": "/image",
               "title": "Image"
+            },
+            {
+              "path": "/backtop",
+              "title": "Backtop"
+            },
+            {
+              "path": "/infiniteScroll",
+              "title": "InfiniteScroll"
             }
           ]
         }
