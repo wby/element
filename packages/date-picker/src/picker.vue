@@ -1,7 +1,7 @@
 <template>
   <el-input
     class="el-date-editor"
-    :class="'el-date-editor--' + type"
+    :class="type === 'weekrange' ? 'el-date-editor--daterange' : 'el-date-editor--' + type"
     :readonly="!editable || readonly || type === 'dates' || type === 'week'"
     :disabled="pickerDisabled"
     :size="pickerSize"
@@ -34,7 +34,7 @@
   <div
     class="el-date-editor el-range-editor el-input__inner"
     :class="[
-      'el-date-editor--' + type,
+      type === 'weekrange' ? 'el-date-editor--daterange' : 'el-date-editor--' + type,
       pickerSize ? `el-range-editor--${ pickerSize }` : '',
       pickerDisabled ? 'is-disabled' : '',
       pickerVisible ? 'is-active' : ''
@@ -114,6 +114,7 @@ const DEFAULT_FORMATS = {
   week: 'yyyywWW',
   timerange: 'HH:mm:ss',
   daterange: 'yyyy-MM-dd',
+  weekrange: 'yyyy-MM-dd',
   monthrange: 'yyyy-MM',
   datetimerange: 'yyyy-MM-dd HH:mm:ss',
   year: 'yyyy'
@@ -127,6 +128,7 @@ const HAVE_TRIGGER_TYPES = [
   'month',
   'year',
   'daterange',
+  'weekrange',
   'monthrange',
   'timerange',
   'datetimerange',
@@ -204,6 +206,10 @@ const TYPE_VALUE_RESOLVER_MAP = {
     parser: DATE_PARSER
   },
   daterange: {
+    formatter: RANGE_FORMATTER,
+    parser: RANGE_PARSER
+  },
+  weekrange: {
     formatter: RANGE_FORMATTER,
     parser: RANGE_PARSER
   },
@@ -482,6 +488,8 @@ export default {
 
     selectionMode() {
       if (this.type === 'week') {
+        return 'week';
+      } else if (this.type === 'weekrange') {
         return 'week';
       } else if (this.type === 'month') {
         return 'month';

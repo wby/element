@@ -1,40 +1,49 @@
 <template>
-  <table
-    cellspacing="0"
-    cellpadding="0"
-    class="el-date-table"
-    @click="handleClick"
-    @mousemove="handleMouseMove"
-    :class="{ 'is-week-mode': selectionMode === 'week' }">
-    <tbody>
-    <tr>
-      <th v-if="showWeekNumber">{{ t('el.datepicker.week') }}</th>
-      <th v-for="(week, key) in WEEKS" :key="key">{{ t('el.datepicker.weeks.' + week) }}</th>
-    </tr>
-    <tr
-      class="el-date-table__row"
-      v-for="(row, key) in rows"
-      :class="{ current: isWeekActive(row[1]) }"
-      :key="key">
-      <td
-        v-for="(cell, key) in row"
-        :class="getCellClasses(cell)"
-        :key="key">
-        <div>
+    <table
+            cellspacing="0"
+            cellpadding="0"
+            class="el-date-table"
+            @click="handleClick"
+            @mousemove="handleMouseMove"
+            :class="{ 'is-week-mode': true }">
+        <tbody>
+        <tr>
+            <th v-if="showWeekNumber">{{ t('el.datepicker.week') }}</th>
+            <th v-for="(week, key) in WEEKS" :key="key">{{ t('el.datepicker.weeks.' + week) }}</th>
+        </tr>
+        <tr
+                class="el-date-table__row"
+                v-for="(row, key) in rows"
+                :class="{ current: isWeekActive(row[1]) }"
+                :key="key">
+            <td
+                    v-for="(cell, key) in row"
+                    :class="getCellClasses(cell)"
+                    :key="key">
+                <div>
           <span>
             {{ cell.text }}
           </span>
-        </div>
-      </td>
-    </tr>
-    </tbody>
-  </table>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
 </template>
 
 <script>
-  import { getFirstDayOfMonth, getDayCountOfMonth, getWeekNumber, getStartDateOfMonth, prevDate, nextDate, isDate, clearTime as _clearTime} from 'element-ui/src/utils/date-util';
+  import {
+    getFirstDayOfMonth,
+    getDayCountOfMonth,
+    getWeekNumber,
+    getStartDateOfMonth,
+    prevDate,
+    nextDate,
+    isDate,
+    clearTime as _clearTime
+  } from 'element-ui/src/utils/date-util';
   import Locale from 'element-ui/src/mixins/locale';
-  import { arrayFindIndex, arrayFind, coerceTruthyValueToArray } from 'element-ui/src/utils/util';
+  import {arrayFind} from 'element-ui/src/utils/util';
 
   const WEEKS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
   const getDateTimestamp = function(time) {
@@ -47,20 +56,12 @@
     }
   };
 
-  // remove the first element that satisfies `pred` from arr
-  // return a new array if modification occurs
-  // return the original array otherwise
-  const removeFromArray = function(arr, pred) {
-    const idx = typeof pred === 'function' ? arrayFindIndex(arr, pred) : arr.indexOf(pred);
-    return idx >= 0 ? [...arr.slice(0, idx), ...arr.slice(idx + 1)] : arr;
-  };
-
   export default {
     mixins: [Locale],
 
     props: {
       firstDayOfWeek: {
-        default: 7,
+        default: 1,
         type: Number,
         validator: val => val >= 1 && val <= 7
       },
@@ -77,7 +78,7 @@
       date: {},
 
       selectionMode: {
-        default: 'day'
+        default: 'week'
       },
 
       showWeekNumber: {
@@ -140,29 +141,34 @@
 
         const startDate = this.startDate;
         const disabledDate = this.disabledDate;
-        const selectedDate = this.selectionMode === 'dates' ? coerceTruthyValueToArray(this.value) : [];
+        const selectedDate = [];
         const now = getDateTimestamp(new Date());
 
+        let _maxDateWeek = this.maxDate ? this.maxDate.getDay() : 0;
+        let weekEndTime = getDateTimestamp(this.maxDate) + (7 - _maxDateWeek) * 24 * 3600 * 1000;
+        if (_maxDateWeek === 0) {
+          weekEndTime = getDateTimestamp(this.maxDate);
+        }
         for (let i = 0; i < 6; i++) {
           const row = rows[i];
 
           if (this.showWeekNumber) {
             if (!row[0]) {
-              row[0] = { type: 'week', text: getWeekNumber(nextDate(startDate, i * 7 + 1)) };
+              row[0] = {type: 'week', text: getWeekNumber(nextDate(startDate, i * 7 + 1))};
             }
           }
 
           for (let j = 0; j < 7; j++) {
             let cell = row[this.showWeekNumber ? j + 1 : j];
             if (!cell) {
-              cell = { row: i, column: j, type: 'normal', inRange: false, start: false, end: false };
+              cell = {row: i, column: j, type: 'normal', inRange: false, start: false, end: false};
             }
 
             cell.type = 'normal';
 
             const index = i * 7 + j;
             const time = nextDate(startDate, index - offset).getTime();
-            cell.inRange = time >= getDateTimestamp(this.minDate) && time <= getDateTimestamp(this.maxDate);
+            cell.inRange = time >= getDateTimestamp(this.minDate) && time <= weekEndTime;
             cell.start = this.minDate && time === getDateTimestamp(this.minDate);
             cell.end = this.maxDate && time === getDateTimestamp(this.maxDate);
             const isToday = time === now;
@@ -195,17 +201,6 @@
 
             this.$set(row, this.showWeekNumber ? j + 1 : j, cell);
           }
-
-          if (this.selectionMode === 'week') {
-            const start = this.showWeekNumber ? 1 : 0;
-            const end = this.showWeekNumber ? 7 : 6;
-            const isWeekActive = this.isWeekActive(row[start + 1]);
-
-            row[start].inRange = isWeekActive;
-            row[start].start = isWeekActive;
-            row[end].inRange = isWeekActive;
-            row[end].end = isWeekActive;
-          }
         }
 
         return rows;
@@ -232,12 +227,11 @@
 
     data() {
       return {
-        tableRows: [ [], [], [], [], [], [] ],
+        tableRows: [[], [], [], [], [], []],
         lastRow: null,
         lastColumn: null
       };
     },
-
     methods: {
       cellMatchesDate(cell, date) {
         const value = new Date(date);
@@ -313,7 +307,6 @@
         }
 
         newDate.setDate(parseInt(cell.text, 10));
-
         if (isDate(this.value)) {
           const dayOffset = (this.value.getDay() - this.firstDayOfWeek + 7) % 7 - 1;
           const weekDate = prevDate(this.value, dayOffset);
@@ -326,7 +319,11 @@
         minDate = getDateTimestamp(minDate);
         maxDate = getDateTimestamp(maxDate) || minDate;
         [minDate, maxDate] = [Math.min(minDate, maxDate), Math.max(minDate, maxDate)];
-
+        let _maxDateWeek = (new Date(maxDate)).getDay();
+        let weekEndTime = maxDate + (7 - _maxDateWeek) * 24 * 3600 * 1000;
+        if (_maxDateWeek === 0) {
+          weekEndTime = maxDate;
+        }
         const startDate = this.startDate;
         const rows = this.rows;
         for (let i = 0, k = rows.length; i < k; i++) {
@@ -338,7 +335,7 @@
             const index = i * 7 + j + (this.showWeekNumber ? -1 : 0);
             const time = nextDate(startDate, index - this.offsetDay).getTime();
 
-            cell.inRange = minDate && time >= minDate && time <= maxDate;
+            cell.inRange = minDate && time >= minDate && time <= weekEndTime;
             cell.start = minDate && time === minDate;
             cell.end = maxDate && time === maxDate;
           }
@@ -391,14 +388,13 @@
         if (target.tagName !== 'TD') return;
 
         const row = target.parentNode.rowIndex - 1;
-        const column = this.selectionMode === 'week' ? 1 : target.cellIndex;
+        let column = this.selectionMode === 'week' ? 0 : target.cellIndex;
         const cell = this.rows[row][column];
 
         if (cell.disabled || cell.type === 'week') return;
 
         const newDate = this.getDateOfCell(row, column);
-
-        if (this.selectionMode === 'range') {
+        if (this.selectionMode === 'week') {
           if (!this.rangeState.selecting) {
             this.$emit('pick', {minDate: newDate, maxDate: null});
             this.rangeState.selecting = true;
@@ -410,23 +406,6 @@
             }
             this.rangeState.selecting = false;
           }
-        } else if (this.selectionMode === 'day') {
-          this.$emit('pick', newDate);
-        } else if (this.selectionMode === 'week') {
-          const weekNumber = getWeekNumber(newDate);
-          const value = newDate.getFullYear() + 'w' + weekNumber;
-          this.$emit('pick', {
-            year: newDate.getFullYear(),
-            week: weekNumber,
-            value: value,
-            date: newDate
-          });
-        } else if (this.selectionMode === 'dates') {
-          const value = this.value || [];
-          const newValue = cell.selected
-            ? removeFromArray(value, date => date.getTime() === newDate.getTime())
-            : [...value, newDate];
-          this.$emit('pick', newValue);
         }
       }
     }

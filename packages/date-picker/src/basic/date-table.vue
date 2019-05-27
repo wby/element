@@ -391,7 +391,10 @@
         if (target.tagName !== 'TD') return;
 
         const row = target.parentNode.rowIndex - 1;
-        const column = this.selectionMode === 'week' ? 1 : target.cellIndex;
+        let column = this.selectionMode === 'week' ? 1 : target.cellIndex;
+        if (this.selectionMode === 'week' && this.firstDayOfWeek === 1) {
+          column = 0;
+        }
         const cell = this.rows[row][column];
 
         if (cell.disabled || cell.type === 'week') return;
